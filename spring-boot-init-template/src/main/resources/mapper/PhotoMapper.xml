@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="top.sharehome.springbootinittemplate.mapper.PhotoMapper">
+
+    <resultMap id="BaseResultMap" type="top.sharehome.springbootinittemplate.model.entity.Photo">
+            <id property="photoId" column="photo_id" jdbcType="BIGINT"/>
+            <result property="userId" column="user_id" jdbcType="BIGINT"/>
+            <result property="photoUrl" column="photo_url" jdbcType="VARCHAR"/>
+            <result property="photoDescription" column="photo_description" jdbcType="VARCHAR"/>
+            <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+            <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
+            <result property="isDeleted" column="is_deleted" jdbcType="TINYINT"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        photo_id,user_id,photo_url,
+        photo_description,create_time,update_time,
+        is_deleted
+    </sql>
+    <select id="selectPhotoWithUserAndTags" resultType="top.sharehome.springbootinittemplate.model.vo.photo.AdminPhotoPageVo">
+        SELECT p.photo_id as photoId, p.photo_url as photoUrl, p.photo_description as photoDescription, p.create_time as createTime, p.update_time as updateTime,
+        u.user_name as userName,
+        GROUP_CONCAT(t.tag_name ORDER BY t.tag_id SEPARATOR ', ') as tagName
+        FROM t_photo p
+        LEFT JOIN t_user u ON p.user_id = u.user_id
+        LEFT JOIN t_photo_tag pt ON p.photo_id = pt.photo_id
+        LEFT JOIN t_tag t ON pt.tag_id = t.tag_id
+        <where>
+            <if test="adminPhotoPageDto.photoDescription != null and adminPhotoPageDto.photoDescription != ''">
+                AND p.photo_description LIKE CONCAT('%', #{adminPhotoPageDto.photoDescription}, '%')
+            </if>
+            <if test="loginUserId != null">
+                AND p.user_id = #{loginUserId}
+            </if>
+            and p.is_deleted = 0
+        </where>
+        GROUP BY p.photo_id
+        ORDER BY p.create_time DESC
+    </select>
+</mapper>
